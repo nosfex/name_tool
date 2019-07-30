@@ -1,0 +1,7 @@
+{
+  "nomenclature_filter": {
+    "prefix_filter":["ngd", "bp", "model", "wtf"],
+    "suffix_filter":["final"],
+    "file_filter":[".png", ".jpg", ".fbx", ".maya"]
+  }
+}

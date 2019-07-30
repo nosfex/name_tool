@@ -1,10 +1,25 @@
 
 import os
+from typing import List
 class Filewalker:
-    def __init__(self, walkfolder):
+    def __init__(self, file_filter: List = None, prefix_filter: List = None, suffix_filter: List = None,):
         self.file_filter = ['.png', '.fbx', '.max']
+        if file_filter:
+            self.file_filter = file_filter
+
         self.prefix_filter = ['ngd_valid_prefix']
+        if prefix_filter:
+            self.prefix_filter = prefix_filter
+
         self.suffix_filter = ['']
+        if suffix_filter:
+            self.suffix_filter = suffix_filter
+
+        print(self.suffix_filter)
+        self.passing_files = []
+        self.failing_files = []
+
+    def walk(self, walkfolder : str):
         self.passing_files = []
         self.failing_files = []
         for r, d, f in os.walk(walkfolder):
@@ -15,7 +30,4 @@ class Filewalker:
                     self.failing_files.append(file)
 
     def match_xfix(self, xfix,  file):
-        for pr in self.prefix_filter:
-            if pr in file:
-                return True
-        return False
+        return any(pr in file for pr in xfix)

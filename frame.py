@@ -2,74 +2,72 @@ import wx
 import wx.lib.scrolledpanel as scrolled
 from filewalker import Filewalker
 
-class Framewalker(wx.Frame):
+class MainFrame(wx.Frame):
 
-    def __init__(self):
+    def __init__(self, filewalker:Filewalker):
         wx.Frame.__init__(self, None,wx.ID_ANY, "CHULIO CHECK", size=wx.Size(600,400))
-        self.dialog = wx.DirDialog(None, "Choose a Directory:", style=wx.DD_DEFAULT_STYLE | wx.DD_NEW_DIR_BUTTON)
-        self.walker = None
-        self.pass_text = []
-        self.fail_text = []
+        self.filewalker = filewalker
+        self.SetMenuBar(MenuBar(self))
+        self.pass_panel = TextPanel(self)
+        self.fail_panel = TextPanel(self)
+        self.sizer = wx.GridSizer(1,2,0,0)
+        self.sizer.Add(self.pass_panel, flag=wx.EXPAND)
+        self.sizer.Add(self.fail_panel, flag=wx.EXPAND)
+        self.SetSizer(self.sizer)
 
-        self.fail_panel, self.fail_scroller = self.add_panel_scroller(wx.Point(200, 10))
-        self.pass_panel, self.pass_scroller = self.add_panel_scroller(wx.Point(0, 10))
-        if self.dialog.ShowModal() == wx.ID_OK:
-            self.walker = Filewalker(self.dialog.GetPath())
+    def on_open_click(self, event):
+        del event
+        dialog = wx.DirDialog(None, "Choose a Directory:", style=wx.DD_DEFAULT_STYLE | wx.DD_NEW_DIR_BUTTON)
 
-        self.fail_sizer = None
-        self.pass_sizer = None
-        if self.walker:
-            for file in self.walker.passing_files:
-                self.pass_text.append( wx.StaticText(self.pass_scroller, id=wx.ID_ANY, label=file, pos=wx.Point(0,0 )))
-                if self.pass_sizer is None:
-                    self.pass_sizer = self.expanded(self.pass_text[-1])
-                else:
-                    self.pass_sizer.Add(self.pass_text[-1], proportion=0)
+        if dialog.ShowModal() == wx.ID_OK:
+            self.pass_panel.clear()
+            self.fail_panel.clear()
+            self.filewalker.walk(dialog.GetPath())
 
-            for file in self.walker.failing_files:
-                self.fail_text.append( wx.StaticText(self.fail_scroller, id=wx.ID_ANY, label=file, pos=wx.Point(0,0 )))
-                if self.fail_sizer is None:
-                    self.fail_sizer = self.expanded(self.fail_text[-1])
-                else:
-                    self.fail_sizer.Add(self.fail_text[-1], proportion=0)
+            for file in self.filewalker.passing_files:
+                self.pass_panel.add_element(file)
+            self.pass_panel.render()
 
-        if len(self.fail_text) > 0:
-            self.fail_scroller.SetSizerAndFit(self.fail_sizer)
-            self.fail_sizer.AddSpacer(10)
+            for file in self.filewalker.failing_files:
+                self.fail_panel.add_element(file)
+            self.fail_panel.render()
 
-            fail_panel_sizer = self.expanded(self.fail_scroller)
-            fail_panel_sizer.SetDimension(0, 0, 300, 300)
-            self.fail_panel.SetSizerAndFit(fail_panel_sizer)
+    def on_quit_click(self, event):
+        del event
+        wx.CallAfter(self.Destroy)
 
-        if len(self.pass_text) > 0:
-            self.pass_scroller.SetSizerAndFit(self.pass_sizer)
-            self.pass_sizer.AddSpacer(10)
-            pass_panel_sizer = self.expanded(self.pass_scroller)
-            self.pass_panel.SetSizerAndFit(pass_panel_sizer)
+class MenuBar(wx.MenuBar):
+    def __init__(self, parent, *args, **kwargs):
+        super(MenuBar, self).__init__(*args, **kwargs)
 
-    def add_panel_scroller(self, panel_pos=wx.Point(0,0)):
-        panel = wx.Panel(self, id=wx.ID_ANY, pos=panel_pos)
-        scroller = scrolled.ScrolledPanel(panel, -1, style = wx.TAB_TRAVERSAL | wx.SUNKEN_BORDER, name="ScrollPanel")
-        scroller.SetAutoLayout(1)
-        scroller.SetupScrolling()
-        return panel, scroller
+        file_menu = wx.Menu()
+        self.Append(file_menu, '&File')
 
-    def setup_sizer_panel(self, scroller, panel, scroller_sizer, panel_sizer):
-        scroller.SetSizerAndFit(scroller_sizer)
-        panel_sizer.AddSpacer(10)
-        panel.SetSizerAndFit(panel_sizer)
-        return scroller, panel_sizer, panel
+        open_menu_item = wx.MenuItem(file_menu, wx.ID_OPEN)
+        parent.Bind(wx.EVT_MENU, parent.on_open_click, id=wx.ID_OPEN)
 
-    def fill_panel_data(self, scroller, files, sizer, text_list):
-        for file in files:
-            text_list.append( wx.StaticText(scroller, id=wx.ID_ANY, label=file, pos=wx.Point(0,0 )))
-            if sizer is None:
-                sizer = self.expanded(text_list[-1])
-            else:
-                sizer.Add(text_list[-1])
-        return sizer, text_list
+        quit_menu_item = wx.MenuItem(file_menu, wx.ID_EXIT)
+        parent.Bind(wx.EVT_MENU, parent.on_open_click, id=wx.ID_OPEN)
 
-    def expanded(self, widget, padding = 30, flag =wx.VERTICAL):
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(widget, proportion=0)
-        return sizer
+        file_menu.Append(open_menu_item)
+        file_menu.Append(quit_menu_item)
+
+class TextPanel(scrolled.ScrolledPanel):
+    def __init__(self, parent):
+        super(TextPanel, self).__init__(parent, -1, style=wx.TAB_TRAVERSAL | wx.SUNKEN_BORDER, name="ScrollPanel")
+        self.SetAutoLayout(1)
+        self.SetupScrolling()
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.AddSpacer(10)
+        self.SetSizer(self.sizer)
+
+    def add_element(self, text):
+        element = wx.StaticText(self, id=wx.ID_ANY, label=text, pos=wx.Point(0,0))
+        self.sizer.Add(element, proportion=0)
+
+    def render(self):
+        self.sizer.FitInside(self)
+
+    def clear(self):
+        self.sizer.Clear(True)
+        self.sizer.FitInside(self)
