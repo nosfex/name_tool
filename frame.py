@@ -1,16 +1,17 @@
 import wx
 import wx.lib.scrolledpanel as scrolled
+import subprocess
 from filewalker import Filewalker
 
 class MainFrame(wx.Frame):
 
-    def __init__(self, filewalker:Filewalker):
-        wx.Frame.__init__(self, None,wx.ID_ANY, "CHULIO CHECK", size=wx.Size(600,400))
+    def __init__(self, filewalker: Filewalker):
+        wx.Frame.__init__(self, None, wx.ID_ANY, "CHULIO CHECK", size=wx.Size(600, 400))
         self.filewalker = filewalker
         self.SetMenuBar(MenuBar(self))
         self.pass_panel = TextPanel(self)
         self.fail_panel = TextPanel(self)
-        self.sizer = wx.GridSizer(1,2,0,0)
+        self.sizer = wx.GridSizer(1, 2, 0, 0)
         self.sizer.Add(self.pass_panel, flag=wx.EXPAND)
         self.sizer.Add(self.fail_panel, flag=wx.EXPAND)
         self.SetSizer(self.sizer)
@@ -36,6 +37,10 @@ class MainFrame(wx.Frame):
         del event
         wx.CallAfter(self.Destroy)
 
+    def on_svn_open(self, event):
+        del event
+        process = subprocess.call('svn', shell=True)
+
 class MenuBar(wx.MenuBar):
     def __init__(self, parent, *args, **kwargs):
         super(MenuBar, self).__init__(*args, **kwargs)
@@ -47,10 +52,20 @@ class MenuBar(wx.MenuBar):
         parent.Bind(wx.EVT_MENU, parent.on_open_click, id=wx.ID_OPEN)
 
         quit_menu_item = wx.MenuItem(file_menu, wx.ID_EXIT)
-        parent.Bind(wx.EVT_MENU, parent.on_open_click, id=wx.ID_OPEN)
+        parent.Bind(wx.EVT_MENU, parent.on_quit_click, id=wx.ID_OPEN)
 
         file_menu.Append(open_menu_item)
         file_menu.Append(quit_menu_item)
+
+        repo_menu = wx.Menu()
+        self.Append(repo_menu, '&Repo')
+
+        svn_menu_item = wx.MenuItem(repo_menu, wx.ID_OPEN)
+        parent.Bind(wx.EVT_MENU, parent.on_svn_open, id=wx.ID_OPEN)
+
+        repo_menu.Append(svn_menu_item)
+
+
 
 class TextPanel(scrolled.ScrolledPanel):
     def __init__(self, parent):
@@ -62,7 +77,7 @@ class TextPanel(scrolled.ScrolledPanel):
         self.SetSizer(self.sizer)
 
     def add_element(self, text):
-        element = wx.StaticText(self, id=wx.ID_ANY, label=text, pos=wx.Point(0,0))
+        element = wx.StaticText(self, id=wx.ID_ANY, label=text, pos=wx.Point(0, 0))
         self.sizer.Add(element, proportion=0)
 
     def render(self):
