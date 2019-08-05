@@ -1,5 +1,6 @@
 import wx
 import wx.lib.scrolledpanel as scrolled
+import webbrowser
 import subprocess
 from filewalker import Filewalker
 
@@ -52,20 +53,18 @@ class MenuBar(wx.MenuBar):
         parent.Bind(wx.EVT_MENU, parent.on_open_click, id=wx.ID_OPEN)
 
         quit_menu_item = wx.MenuItem(file_menu, wx.ID_EXIT)
-        parent.Bind(wx.EVT_MENU, parent.on_quit_click, id=wx.ID_OPEN)
+        parent.Bind(wx.EVT_MENU, parent.on_quit_click, id=wx.ID_EXIT)
 
         file_menu.Append(open_menu_item)
         file_menu.Append(quit_menu_item)
 
-        repo_menu = wx.Menu()
-        self.Append(repo_menu, '&Repo')
+        #repo_menu = wx.Menu()
+        #self.Append(repo_menu, '&Repo')
 
-        svn_menu_item = wx.MenuItem(repo_menu, wx.ID_OPEN)
-        parent.Bind(wx.EVT_MENU, parent.on_svn_open, id=wx.ID_OPEN)
+        #svn_menu_item = wx.MenuItem(repo_menu, wx.ID_OPEN)
+        #parent.Bind(wx.EVT_MENU, parent.on_svn_open, id=wx.ID_OPEN)
 
-        repo_menu.Append(svn_menu_item)
-
-
+        #repo_menu.Append(svn_menu_item)
 
 class TextPanel(scrolled.ScrolledPanel):
     def __init__(self, parent):
@@ -77,7 +76,7 @@ class TextPanel(scrolled.ScrolledPanel):
         self.SetSizer(self.sizer)
 
     def add_element(self, text):
-        element = wx.StaticText(self, id=wx.ID_ANY, label=text, pos=wx.Point(0, 0))
+        element = Button(self, id=wx.ID_ANY, label=text.file, pos=wx.Point(0, 0), path=text.path)
         self.sizer.Add(element, proportion=0)
 
     def render(self):
@@ -86,3 +85,13 @@ class TextPanel(scrolled.ScrolledPanel):
     def clear(self):
         self.sizer.Clear(True)
         self.sizer.FitInside(self)
+
+class Button(wx.Button):
+    def __init__(self, parent, id, label, pos, size=wx.Size(200, 20), style=0, validator=wx.Validator(), name="", path=None):
+        super(Button, self).__init__(parent, id, label, pos, size, style, validator, name)
+        self.path = path
+        self.Bind(wx.EVT_BUTTON, self.on_text_ctrl_mouse_down)
+
+    def on_text_ctrl_mouse_down(self, event):
+        print("wtf")
+        webbrowser.open('file:///' + self.path)

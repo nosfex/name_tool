@@ -1,5 +1,6 @@
 
 import os
+
 from typing import List
 class Filewalker:
     def __init__(self, file_filter: List = None, prefix_filter: List = None, suffix_filter: List = None,):
@@ -25,9 +26,14 @@ class Filewalker:
         for r, d, f in os.walk(walkfolder):
             for file in f:
                 if self.match_xfix(self.prefix_filter ,file ) and self.match_xfix( self.suffix_filter, file):
-                    self.passing_files.append(file)
+                    self.passing_files.append(FileHelper(file, r))
                 else:
-                    self.failing_files.append(file)
+                    self.failing_files.append(FileHelper(file, r))
 
     def match_xfix(self, xfix,  file):
         return any(pr in file for pr in xfix)
+
+class FileHelper:
+    def __init__(self, file, path):
+        self.file = file
+        self.path = path
