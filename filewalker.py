@@ -1,4 +1,3 @@
-
 import os
 
 from typing import List
@@ -25,7 +24,7 @@ class Filewalker:
         self.failing_files = []
         for r, d, f in os.walk(walkfolder):
             for file in f:
-                if self.match_xfix(self.prefix_filter ,file ) and self.match_xfix( self.suffix_filter, file):
+                if self.match_xfix(self.prefix_filter, file) and self.match_xfix(self.suffix_filter, file) and self.match_xfix(self.file_filter, file):
                     self.passing_files.append(FileHelper(file, r))
                 else:
                     self.failing_files.append(FileHelper(file, r))

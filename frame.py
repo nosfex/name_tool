@@ -2,6 +2,7 @@ import wx
 import wx.lib.scrolledpanel as scrolled
 import webbrowser
 import subprocess
+from load_function import parse
 from filewalker import Filewalker
 
 class MainFrame(wx.Frame):
@@ -38,9 +39,26 @@ class MainFrame(wx.Frame):
         del event
         wx.CallAfter(self.Destroy)
 
+    def on_load_filter(self, event):
+        del event
+        dialog = wx.FileDialog(None, "Choose a filter:", defaultDir="", defaultFile="", wildcard="*.json", style= wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+
+        if dialog.ShowModal() == wx.ID_OK:
+            path = dialog.GetPath()
+            nomenclature_filter = parse(path, 'nomenclature_filter')
+            self.filewalker = Filewalker(nomenclature_filter.file,
+                                    nomenclature_filter.prefix,
+                                    nomenclature_filter.suffix)
+
+
     def on_svn_open(self, event):
         del event
         process = subprocess.call('svn', shell=True)
+
+    def on_help_box(self, event):
+        del event
+
+        help_box = wx.MessageBox('Contact: gerardo.heidel@ngdstudios.com', 'Helpful Message Box', wx.OK | wx.ICON_INFORMATION)
 
 class MenuBar(wx.MenuBar):
     def __init__(self, parent, *args, **kwargs):
@@ -55,16 +73,20 @@ class MenuBar(wx.MenuBar):
         quit_menu_item = wx.MenuItem(file_menu, wx.ID_EXIT)
         parent.Bind(wx.EVT_MENU, parent.on_quit_click, id=wx.ID_EXIT)
 
+        file_filter_item = wx.MenuItem(file_menu, wx.ID_ANY, "Filter" )
+        parent.Bind(wx.EVT_MENU, parent.on_load_filter, file_filter_item)
+
         file_menu.Append(open_menu_item)
         file_menu.Append(quit_menu_item)
+        file_menu.Append(file_filter_item)
 
-        #repo_menu = wx.Menu()
-        #self.Append(repo_menu, '&Repo')
+        help_menu = wx.Menu()
+        self.Append(help_menu, '&Help')
 
-        #svn_menu_item = wx.MenuItem(repo_menu, wx.ID_OPEN)
-        #parent.Bind(wx.EVT_MENU, parent.on_svn_open, id=wx.ID_OPEN)
+        help_item = wx.MenuItem(help_menu, wx.ID_ANY, "HelpBox")
+        parent.Bind(wx.EVT_MENU, parent.on_help_box, help_item)
 
-        #repo_menu.Append(svn_menu_item)
+        help_menu.Append(help_item)
 
 class TextPanel(scrolled.ScrolledPanel):
     def __init__(self, parent):
